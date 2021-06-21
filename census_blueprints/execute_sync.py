@@ -64,8 +64,8 @@ def execute_job(
 
 def main():
     args = get_args()
-    invalid_threshold = args.invalid_threshold
-    failure_threshold = args.failure_threshold
+    invalid_threshold = int(args.invalid_threshold)
+    failure_threshold = int(args.failure_threshold)
     url = args.url
     check_status = execute_request.convert_to_boolean(args.check_status)
 
