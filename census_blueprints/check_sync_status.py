@@ -91,8 +91,8 @@ def determine_run_status(
 
 def main():
     args = get_args()
-    invalid_threshold = args.invalid_threshold
-    failure_threshold = args.failure_threshold
+    invalid_threshold = int(args.invalid_threshold)
+    failure_threshold = int(args.failure_threshold)
     trigger_url = args.url
     sync_id = trigger_url.split('/')[-2]
 
