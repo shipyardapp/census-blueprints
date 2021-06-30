@@ -96,13 +96,13 @@ def main():
     trigger_url = args.url
     sync_id = trigger_url.split('/')[-2]
 
-    org_id = os.environ.get("SHIPYARD_ORG_ID") if os.environ.get(
-        'USER') == 'shipyard' else sync_id
-    fleet_log_id = os.environ.get("SHIPYARD_FLEET_LOG_ID") if os.environ.get(
-        'USER') == 'shipyard' else ''
+    artifact_directory_default = f'{os.environ.get("USER")}-artifacts'
+    base_folder_name = execute_request.clean_folder_name(
+        f'{os.environ.get("SHIPYARD_ARTIFACTS_DIRECTORY",artifact_directory_default)}/census-blueprints/')
 
     pickle_folder_name = execute_request.clean_folder_name(
-        f'census-blueprint-logs/{org_id}/{fleet_log_id}')
+        f'{base_folder_name}/variables')
+    execute_request.create_folder_if_dne(pickle_folder_name)
     pickle_file_name = execute_request.combine_folder_and_file_name(
         pickle_folder_name, 'sync_run_id.pickle')
 
@@ -111,11 +111,6 @@ def main():
     else:
         with open(pickle_file_name, 'rb') as f:
             sync_run_id = pickle.load(f)
-
-    log_id = os.environ.get("SHIPYARD_LOG_ID") if os.environ.get(
-        'USER') == 'shipyard' else sync_run_id
-    base_folder_name = execute_request.clean_folder_name(
-        f'census-blueprint-logs/{org_id}/{fleet_log_id}/{log_id}')
 
     sync_details_response = get_sync_details(
         trigger_url,

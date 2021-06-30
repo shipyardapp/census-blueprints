@@ -44,11 +44,12 @@ def write_json_to_file(json_object, file_name):
                 json_object,
                 ensure_ascii=False,
                 indent=4))
+    print(f'Response stored at {file_name}')
 
 
 def execute_job(
         url,
-        folder_name='dbt-blueprint-logs',
+        folder_name,
         file_name='job_details_response.json'):
     print(f'Starting sync for {url.split("/")[-2]}')
     job_run_req = execute_request.execute_request(
@@ -70,14 +71,9 @@ def main():
     check_status = execute_request.convert_to_boolean(args.check_status)
 
     sync_id = url.split('/')[-2]
-    org_id = os.environ.get("SHIPYARD_ORG_ID") if os.environ.get(
-        'USER') == 'shipyard' else sync_id
-    fleet_log_id = os.environ.get("SHIPYARD_FLEET_LOG_ID") if os.environ.get(
-        'USER') == 'shipyard' else ''
-    log_id = os.environ.get("SHIPYARD_LOG_ID") if os.environ.get(
-        'USER') == 'shipyard' else ''
+    artifact_directory_default = f'{os.environ.get("USER")}-artifacts'
     base_folder_name = execute_request.clean_folder_name(
-        f'census-blueprint-logs/{org_id}/{fleet_log_id}/{log_id}')
+        f'{os.environ.get("SHIPYARD_ARTIFACTS_DIRECTORY",artifact_directory_default)}/census-blueprints/')
 
     job_run_response = execute_job(
         url,
@@ -86,7 +82,8 @@ def main():
 
     sync_run_id = job_run_response['data']['sync_run_id']
     pickle_folder_name = execute_request.clean_folder_name(
-        f'census-blueprint-logs/{org_id}/{fleet_log_id}')
+        f'{base_folder_name}/variables')
+    execute_request.create_folder_if_dne(pickle_folder_name)
     pickle_file_name = execute_request.combine_folder_and_file_name(
         pickle_folder_name, 'sync_run_id.pickle')
     with open(pickle_file_name, 'wb') as f:
