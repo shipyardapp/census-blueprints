@@ -1,0 +1,1 @@
+httprequest-blueprints @ git+https://github.com/shipyardapp/httprequest-blueprints@v0.1.4
