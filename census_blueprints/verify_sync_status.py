@@ -26,6 +26,7 @@ def get_sync_status(sync_run_id, access_token):
     Executes/starts a Census Sync
     """
     sync_post_api = f"https://bearer:{access_token}@app.getcensus.com/api/v1/sync_runs/{sync_run_id}"
+    check_sync_response = {}
     try:
         check_sync_response = requests.get(sync_post_api)
         # check if successful, if not return error message
@@ -57,6 +58,7 @@ def handle_sync_run_data(sync_run_data):
     """
     status = sync_run_data['status']
     sync_id = sync_run_data['sync_id']
+    status_code = EXIT_CODE_STATUS_COMPLETED
     if status == "completed":
         print(
             f"Sync {sync_id} completed successfully. ",

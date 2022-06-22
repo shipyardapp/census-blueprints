@@ -26,10 +26,11 @@ def execute_sync(sync_id, access_token):
     api_headers = {
         'Content-Type' : 'application/json'
         }
+    sync_trigger_json = {}
     try:
         sync_trigger_response = requests.post(sync_post_api, headers=api_headers)
         # check if successful, if not return error message
-        if sync_trigger_response.status_code in [200, 201]:
+        if sync_trigger_response.status_code == requests.codes.ok:
             sync_trigger_json = sync_trigger_response.json()
         else:
             print(f"Sync request failed. Reason: {sync_trigger_response.content}")
@@ -42,7 +43,7 @@ def execute_sync(sync_id, access_token):
         print("Successfully triggered sync")
         return sync_trigger_response.json()
 
-    elif sync_trigger_json['status'] == 'error':
+    if sync_trigger_json['status'] == 'error':
        print(f"Encounted an error - Census says: {sync_trigger_json['message']}")
        sys.exit(EXIT_CODE_SYNC_REFRESH_ERROR)
     else:
