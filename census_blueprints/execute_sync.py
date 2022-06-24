@@ -32,8 +32,13 @@ def execute_sync(sync_id, access_token):
         # check if successful, if not return error message
         if sync_trigger_response.status_code == requests.codes.ok:
             sync_trigger_json = sync_trigger_response.json()
+        elif sync_trigger_response.status_code == 404:
+            print(f"Sync request failed. Check if {sync_id} is valid?")
+            sys.exit(EXIT_CODE_BAD_REQUEST)
         else:
             print(f"Sync request failed. Reason: {sync_trigger_response.content}")
+            if "Access denied" in sync_trigger_response.content:
+                sys.exit(EXIT_CODE_INVALID_CREDENTIALS)
             sys.exit(EXIT_CODE_BAD_REQUEST)
     except Exception as e:
         print(f"Sync trigger request failed due to: {e}")
@@ -44,10 +49,10 @@ def execute_sync(sync_id, access_token):
         return sync_trigger_response.json()
 
     if sync_trigger_json['status'] == 'error':
-       print(f"Encounted an error - Census says: {sync_trigger_json['message']}")
+       print(f"Encountered an error - Census says: {sync_trigger_json['message']}")
        sys.exit(EXIT_CODE_SYNC_REFRESH_ERROR)
     else:
-        print(f"An unknown error has occured - API response: {sync_trigger_json}")
+        print(f"An unknown error has occurred - API response: {sync_trigger_json}")
         sys.exit(EXIT_CODE_UNKNOWN_ERROR)
 
 
