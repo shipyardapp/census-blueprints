@@ -4,13 +4,13 @@ import requests
 import shipyard_utils as shipyard
 
 
-EXIT_CODE_STATUS_COMPLETED = 0
+EXIT_CODE_FINAL_STATUS_COMPLETED = 0
 EXIT_CODE_INVALID_CREDENTIALS = 200
 EXIT_CODE_BAD_REQUEST = 201
-EXIT_CODE_UNKNOWN_ERROR = 211
+EXIT_CODE_UNKNOWN_ERROR = 202
 EXIT_CODE_SYNC_CHECK_ERROR = 220
-EXIT_CODE_STATUS_RUNNING = 222
-EXIT_CODE_STATUS_FAILED = 223
+EXIT_CODE_STATUS_INCOMPLETE = 210
+EXIT_CODE_FINAL_STATUS_ERRORED = 211
 
 
 def get_args():
@@ -23,7 +23,8 @@ def get_args():
 
 def get_sync_status(sync_run_id, access_token):
     """
-    Executes/starts a Census Sync
+    This function returns information on a specific sync run.
+    see https://docs.getcensus.com/basics/api/sync-runs#get-sync_runs-id
     """
     sync_post_api = f"https://bearer:{access_token}@app.getcensus.com/api/v1/sync_runs/{sync_run_id}"
     check_sync_response = {}
@@ -49,7 +50,7 @@ def get_sync_status(sync_run_id, access_token):
         sys.exit(EXIT_CODE_SYNC_CHECK_ERROR)
 
 
-def handle_sync_run_data(sync_run_data):
+def determine_sync_run_status(sync_run_data):
     """
     Analyses sync run data to determine status and print sync run information
     
@@ -58,17 +59,18 @@ def handle_sync_run_data(sync_run_data):
     """
     status = sync_run_data['status']
     sync_id = sync_run_data['sync_id']
+    sync_run_id = sync_run_data['id']
     status_code = EXIT_CODE_STATUS_COMPLETED
     if status == "completed":
         print(
-            f"Sync {sync_id} completed successfully. ",
+            f"Sync run:{sync_run_id} for {sync_id} completed successfully. ",
             f"Completed at: {sync_run_data['completed_at']}"
         )
         status_code = EXIT_CODE_STATUS_COMPLETED
         
     elif status == "working":
         print(
-            f"Sync {sync_id} still Running. ",
+            f"Sync run:{sync_run_id} for {sync_id} still Running. ",
             f"Current records processed: {sync_run_data['records_processed']}"
         )
         status_code = EXIT_CODE_STATUS_RUNNING
@@ -76,12 +78,12 @@ def handle_sync_run_data(sync_run_data):
     elif status == "failed":
         error_code = sync_run_data['error_code']
         error_message = sync_run_data['error_message']
-        print(f"Sync {sync_id} failed. {error_code} {error_message}")
+        print(f"Sync run:{sync_run_id} for {sync_id} failed. {error_code} {error_message}")
         status_code = EXIT_CODE_STATUS_FAILED
         
     else:
-        print("An unknown error has occured with {sync_id}")
-        print("Unknown Sync status: {status}")
+        print(f"An unknown error has occured with Run:{sync_run_id} with Sync Id {sync_id}")
+        print(f"Unknown Sync status: {status}")
         status_code = EXIT_CODE_UNKNOWN_ERROR
     
     return status_code
@@ -105,7 +107,13 @@ def main():
             artifact_subfolder_paths, 'sync_run_id')
     # run check sync status
     sync_run_data = get_sync_status(sync_run_id, access_token)
-    exit_code_status = handle_sync_run_data(sync_run_data)
+    # save sync run data as json file
+    sync_run_data_file_name = shipyard.files.combine_folder_and_file_name(
+        artifact_subfolder_paths['responses'], 
+        f'sync_run_{sync_run_id}_response.json')
+    shipyard.files.write_json_to_file(sync_run_data, sync_run_data_file_name)
+    # return status code to sys.out
+    exit_code_status = determine_sync_run_status(sync_run_data)
     sys.exit(exit_code_status)
 
 
