@@ -40,9 +40,9 @@ def execute_sync(sync_id, access_token):
             print(
                 f"Sync request failed. Reason: {sync_trigger_response.text}")
             if "Access denied" in sync_trigger_response.text:
+                print(
+                    'Check to make sure that your access token doesn\'t have any typos and includes "secret-token:"')
                 sys.exit(EXIT_CODE_INVALID_CREDENTIALS)
-            else:
-                print('The access was not denied')
             sys.exit(EXIT_CODE_BAD_REQUEST)
     except Exception as e:
         print(f"Sync trigger request failed due to: {e}")
